@@ -6,6 +6,7 @@
 
     let mounted = false;
     let notificationsEnabled = false;
+    let subscriptionPush = null;
 
     async function setupNotifications() {
         if ('serviceWorker' in navigator) {
@@ -17,6 +18,7 @@
                     if (subscription) {
                         notificationsEnabled = true;
                         console.log('subscription === >', subscription);
+                        subscriptionPush = JSON.stringify(subscription);
                         // Aquí deberías enviar la subscription al servidor junto con el código
                         // const response = await fetch('https://tu-servidor.com/guardar-suscripcion', {
                         //     method: 'POST',
@@ -56,6 +58,8 @@
                 <p class="text-3xl font-bold text-center">{$orderCode}</p>
                 {#if notificationsEnabled}
                     <p class="mt-2 text-green-600 text-center">✓ Recibirás notificaciones cuando tu pedido esté listo</p>
+                    <br>
+                    <p> { $subscriptionPush } </p>
                 {:else}
                     <button 
                         class="mt-2 w-full bg-blue-500 text-white px-4 py-2 rounded"
