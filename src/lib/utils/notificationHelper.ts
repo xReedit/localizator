@@ -12,8 +12,8 @@ export async function subscribeUserToPush(): Promise<PushSubscription | null> {
     try {
         const registration = await navigator.serviceWorker.ready;
         
-        // Usar la URL de tu servidor existente
-        const response = await fetch('https://tu-servidor.com/obtener-clave-vapid');
+        // Usar el endpoint local para obtener la clave VAPID
+        const response = await fetch('/api/vapid-key');
         const { publicKey } = await response.json();
         
         const subscription = await registration.pushManager.subscribe({
