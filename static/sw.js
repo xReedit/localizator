@@ -1,24 +1,36 @@
 self.addEventListener('push', (event) => {
     const data = event.data.json();
+    
+    // Extraer la información de notificación del payload
+    const notificationData = data.payload.notification;
+    
     const options = {
-        body: data.message,
-        icon: '/icon.png',
-        badge: '/badge.png',
-        vibrate: [200, 100, 200],
-        tag: 'order-notification',
-        actions: [
-            { action: 'open', title: 'Abrir pedido' }
-        ]
+        body: notificationData.body,
+        icon: notificationData.icon || '/favicon.png',
+        vibrate: notificationData.vibrate,
+        lang: notificationData.lang || 'es',
+        tag: 'order-ready',
+        renotify: true,
+        requireInteraction: true,
+        silent: false
     };
 
     event.waitUntil(
-        self.registration.showNotification('Estado del Pedido', options)
+        self.registration.showNotification(notificationData.title, options)
     );
 });
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    if (event.action === 'open') {
-        clients.openWindow('/');
-    }
+    
+    // Enfoca la ventana existente o abre una nueva
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(windowClients => {
+                if (windowClients.length > 0) {
+                    return windowClients[0].focus();
+                }
+                return clients.openWindow('/');
+            })
+    );
 });
