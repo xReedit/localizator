@@ -7,6 +7,7 @@
     let mounted = false;
     let notificationsEnabled = false;
     let setupError = '';
+    let suscripcionString = '';
 
     async function setupNotifications() {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -24,21 +25,23 @@
                     notificationsEnabled = true;
                     setupError = '';
 
-                    // Enviar la suscripción al servidor
-                    const response = await fetch(`${import.meta.env.VITE_URL_API_RESTOBAR}/subscribe`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            orderCode: $orderCode,
-                            subscription: subscription
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    suscripcionString = JSON.stringify(subscription);
 
-                    if (!response.ok) {
-                        throw new Error('Error al registrar la suscripción');
-                    }
+                    // Enviar la suscripción al servidor
+                    // const response = await fetch(`${import.meta.env.VITE_URL_API_RESTOBAR}/subscribe`, {
+                    //     method: 'POST',
+                    //     body: JSON.stringify({
+                    //         orderCode: $orderCode,
+                    //         subscription: subscription
+                    //     }),
+                    //     headers: {
+                    //         'Content-Type': 'application/json'
+                    //     }
+                    // });
+
+                    // if (!response.ok) {
+                    //     throw new Error('Error al registrar la suscripción');
+                    // }
                 }
             } else {
                 setupError = 'Necesitamos tu permiso para enviar notificaciones';
@@ -57,6 +60,16 @@
         }
         await setupNotifications();
     });
+
+    async function copyToClipboard() {
+        try {
+            await navigator.clipboard.writeText(suscripcionString);
+            alert('Copiado al portapapeles!');
+        } catch (err) {
+            console.error('Error al copiar:', err);
+            alert('Error al copiar al portapapeles');
+        }
+    }
 </script>
 
 {#if mounted}
@@ -84,6 +97,22 @@
                     </button>
                 {/if}
             </div>
+            <div class="mt-4">
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="text-xl">Suscripción:</h2>
+        <button 
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600"
+            on:click={copyToClipboard}
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+            </svg>
+            Copiar
+        </button>
+    </div>
+    <pre class="bg-gray-100 p-2 rounded-lg overflow-auto">{suscripcionString}</pre>
+</div>
         {:else}
             <p>Generando código...</p>
         {/if}
