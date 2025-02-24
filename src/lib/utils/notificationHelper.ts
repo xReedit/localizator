@@ -1,3 +1,7 @@
+export async function checkNotificationPermission(): Promise<boolean> {
+    return Notification.permission === 'granted';
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
     try {
         if (!('Notification' in window)) {
@@ -5,23 +9,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
             return false;
         }
 
-        // Solicitar permiso de notificación
-        const notificationPermission = await Notification.requestPermission();
-        
-        // En algunos navegadores móviles, necesitamos verificar permisos de audio
-        if ('permissions' in navigator) {
-            await Promise.all([
-                navigator.permissions.query({ name: 'notifications' }),
-                navigator.permissions.query({ name: 'microphone' as PermissionName })
-            ]);
+        // Verificar si ya tenemos permiso
+        if (await checkNotificationPermission()) {
+            return true;
         }
 
-        // Intentar reproducir un sonido silencioso para habilitar el audio
-        const audio = new Audio('/notification.mp3');
-        await audio.play();
-        audio.pause();
-        audio.currentTime = 0;
-
+        const notificationPermission = await Notification.requestPermission();
         return notificationPermission === 'granted';
     } catch (error) {
         console.error('Error requesting permissions:', error);
@@ -33,7 +26,13 @@ export async function subscribeUserToPush(): Promise<PushSubscription | null> {
     try {
         const registration = await navigator.serviceWorker.ready;
         
-        // Usar el endpoint local para obtener la clave VAPID
+        // Verificar si ya existe una suscripción
+        const existingSubscription = await registration.pushManager.getSubscription();
+        if (existingSubscription) {
+            return existingSubscription;
+        }
+        
+        // Si no existe, crear nueva suscripción
         const response = await fetch('/api/vapid-key');
         const { publicKey } = await response.json();
         
