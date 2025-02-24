@@ -1,7 +1,7 @@
 self.addEventListener('push', (event) => {
     try {
         const data = event.data.json();
-        const notificationData = data.payload.notification;
+        const notificationData = data.notification;
         
         // Crear el contexto de audio al recibir la notificación
         const audioContext = new AudioContext();
