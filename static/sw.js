@@ -1,30 +1,26 @@
 self.addEventListener('push', (event) => {
     const data = event.data.json();
-    
-    // Extraer la información de notificación del payload
     const notificationData = data.payload.notification;
     
     const options = {
-        body: event.data.text(),
+        body: notificationData.body,
         icon: notificationData.icon || '/favicon.png',
-        vibrate: notificationData.vibrate,
-        vibrate: [200, 100, 200], 
-        lang: notificationData.lang || 'es',
+        vibrate: [200, 100, 200, 100, 200],
+        badge: '/badge.png',
         tag: 'order-ready',
         renotify: true,
         requireInteraction: true,
         silent: false,
+        sound: '/notification.mp3',  // Añadir sonido específico
         actions: [
-            {
-                action: 'open',
-                title: 'Abrir',
-            },
-            {
-                action: 'close',
-                title: 'Cerrar',
-            }
+            { action: 'open', title: 'Abrir' },
+            { action: 'close', title: 'Cerrar' }
         ]
     };
+
+    // Reproducir sonido manualmente
+    const audio = new Audio('/notification.mp3');
+    audio.play().catch(error => console.log('Error playing sound:', error));
 
     event.waitUntil(
         self.registration.showNotification('Tu pedido está listo! 🔔', options)

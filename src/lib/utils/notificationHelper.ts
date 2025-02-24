@@ -1,11 +1,32 @@
 export async function requestNotificationPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-        console.error('Este navegador no soporta notificaciones');
+    try {
+        if (!('Notification' in window)) {
+            console.error('Este navegador no soporta notificaciones');
+            return false;
+        }
+
+        // Solicitar permiso de notificación
+        const notificationPermission = await Notification.requestPermission();
+        
+        // En algunos navegadores móviles, necesitamos verificar permisos de audio
+        if ('permissions' in navigator) {
+            await Promise.all([
+                navigator.permissions.query({ name: 'notifications' }),
+                navigator.permissions.query({ name: 'microphone' as PermissionName })
+            ]);
+        }
+
+        // Intentar reproducir un sonido silencioso para habilitar el audio
+        const audio = new Audio('/notification.mp3');
+        await audio.play();
+        audio.pause();
+        audio.currentTime = 0;
+
+        return notificationPermission === 'granted';
+    } catch (error) {
+        console.error('Error requesting permissions:', error);
         return false;
     }
-
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
 }
 
 export async function subscribeUserToPush(): Promise<PushSubscription | null> {
