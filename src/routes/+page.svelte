@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { orderCode } from '$lib/stores/orderStore';
     import { generateOrderCode } from '$lib/utils/codeGenerator';
-    import { requestNotificationPermission, subscribeUserToPush } from '$lib/utils/notificationHelper';
+    import { checkNotificationPermission, requestNotificationPermission, subscribeUserToPush } from '$lib/utils/notificationHelper';
 
     let mounted = false;
     let notificationsEnabled = false;
@@ -16,32 +16,26 @@
         }
 
         try {
-            const swRegistration = await navigator.serviceWorker.register('/sw.js');
-            const permissionGranted = await requestNotificationPermission();
+            // Registrar el service worker si no está registrado
+            let swRegistration;
+            const existingRegistration = await navigator.serviceWorker.getRegistration();
+            
+            if (!existingRegistration) {
+                swRegistration = await navigator.serviceWorker.register('/sw.js');
+            } else {
+                swRegistration = existingRegistration;
+            }
+
+            // Verificar o solicitar permisos
+            const hasPermission = await checkNotificationPermission();
+            const permissionGranted = hasPermission || await requestNotificationPermission();
             
             if (permissionGranted) {
                 const subscription = await subscribeUserToPush();
                 if (subscription) {
                     notificationsEnabled = true;
                     setupError = '';
-
                     suscripcionString = JSON.stringify(subscription);
-
-                    // Enviar la suscripción al servidor
-                    // const response = await fetch(`${import.meta.env.VITE_URL_API_RESTOBAR}/subscribe`, {
-                    //     method: 'POST',
-                    //     body: JSON.stringify({
-                    //         orderCode: $orderCode,
-                    //         subscription: subscription
-                    //     }),
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //     }
-                    // });
-
-                    // if (!response.ok) {
-                    //     throw new Error('Error al registrar la suscripción');
-                    // }
                 }
             } else {
                 setupError = 'Necesitamos tu permiso para enviar notificaciones';
@@ -58,7 +52,12 @@
             const newCode = generateOrderCode();
             orderCode.setCode(newCode);
         }
-        await setupNotifications();
+        
+        // Verificar estado inicial de notificaciones
+        const hasPermission = await checkNotificationPermission();
+        if (hasPermission) {
+            await setupNotifications();
+        }
     });
 
     async function copyToClipboard() {
@@ -74,7 +73,7 @@
 
 {#if mounted}
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Localizador de Pedidos 1</h1>
+        <h1 class="text-2xl font-bold mb-4">Localizador de Pedidos b5</h1>
         
         {#if $orderCode}
             <div class="bg-green-100 p-4 rounded-lg">
