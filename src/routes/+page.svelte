@@ -74,7 +74,7 @@
 
 {#if mounted}
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Localizador de Pedidos</h1>
+        <h1 class="text-2xl font-bold mb-4">Localizador de Pedidos 1</h1>
         
         {#if $orderCode}
             <div class="bg-green-100 p-4 rounded-lg">

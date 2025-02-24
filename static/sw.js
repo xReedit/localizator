@@ -5,18 +5,29 @@ self.addEventListener('push', (event) => {
     const notificationData = data.payload.notification;
     
     const options = {
-        body: notificationData.body,
+        body: event.data.text(),
         icon: notificationData.icon || '/favicon.png',
         vibrate: notificationData.vibrate,
+        vibrate: [200, 100, 200], 
         lang: notificationData.lang || 'es',
         tag: 'order-ready',
         renotify: true,
         requireInteraction: true,
-        silent: false
+        silent: false,
+        actions: [
+            {
+                action: 'open',
+                title: 'Abrir',
+            },
+            {
+                action: 'close',
+                title: 'Cerrar',
+            }
+        ]
     };
 
     event.waitUntil(
-        self.registration.showNotification(notificationData.title, options)
+        self.registration.showNotification('Tu pedido está listo! 🔔', options)
     );
 });
 
