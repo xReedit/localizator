@@ -15,9 +15,9 @@ self.addEventListener('push', (event) => {
 
         const options = {
             body: notificationData.body || 'Tu pedido está listo',
-            icon: notificationData.icon || '/favicon.png',
+            icon: '/icon-192.png',  // Ícono grande para notificaciones
+            badge: '/badge-96.png',  // Badge para la barra de notificaciones
             vibrate: notificationData.vibrate || [200, 100, 200, 100, 200],
-            badge: '/badge.png',
             tag: 'order-ready',
             renotify: true,
             requireInteraction: true,
@@ -53,7 +53,8 @@ self.addEventListener('push', (event) => {
         event.waitUntil(
             self.registration.showNotification('Notificación de Pedido', {
                 body: 'Hay una actualización de tu pedido',
-                icon: '/favicon.png',
+                icon: '/icon-192.png',
+                badge: '/badge-96.png',
                 vibrate: [200, 100, 200],
                 requireInteraction: true,
                 silent: false,
@@ -69,13 +70,22 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     
+    const urlToOpen = new URL('/', self.location.origin).href;
+    
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(windowClients => {
-                if (windowClients.length > 0) {
-                    return windowClients[0].focus();
+                // Si hay una ventana abierta, enfócala y actualiza
+                for (const client of windowClients) {
+                    if (client.url === urlToOpen) {
+                        return client.focus().then(client => {
+                            client.postMessage({ type: 'CHECK_STATUS' });
+                            return client;
+                        });
+                    }
                 }
-                return clients.openWindow('/');
+                // Si no hay ventana abierta, abre una nueva
+                return clients.openWindow(urlToOpen);
             })
     );
 });
